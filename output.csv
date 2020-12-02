@@ -1,0 +1,21 @@
+M1,M2,BikeWay,Color
+Good,Bad,Moderate,Yellow
+Bad,Moderate,Bad,Orange
+Moderate,Moderate,Moderate,Yellow
+Moderate,Good,Good,Green
+Bad,Good,Moderate,Yellow
+Good,Moderate,Good,Green
+Good,Moderate,Good,Green
+Good,Very Good,Very Good,Blue
+Moderate,Very Bad,Very Bad,Red
+Moderate,Very Good,Good,Green
+Moderate,Good,Good,Green
+Good,Very Good,Very Good,Blue
+Good,Good,Good,Green
+Moderate,Moderate,Moderate,Yellow
+Moderate,Good,Good,Green
+Moderate,Good,Good,Green
+Moderate,Bad,Bad,Orange
+Good,Good,Good,Green
+Moderate,Moderate,Moderate,Yellow
+Very Good,Very Good,Very Good,Blue
