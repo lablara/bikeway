@@ -1,0 +1,114 @@
+{
+  "statisticDataWeights": [
+    0.3,
+    0.3,
+    0.3
+  ],
+  "monitoringDataWeights": [
+    0.2,
+    0.2,
+    0.2,
+    0.2,
+    0.2
+  ],
+  "paths": [
+    {
+      "ID": "Feira_de_Santana-BR-P1",
+      "constructionDate": "01/02/2021",
+      "maintenanceDate": "01/03/2021",
+      "inspectionDate": "01/03/2021",
+      "inspectionFeedback": "VB",
+      "stretches": [
+        {
+          "ID": "Feira_de_Santana-BR-P1-S1",
+          "P1": [
+            -12.259737269514789,
+            -38.96369536812054
+          ],
+          "P2": [
+            -12.26002063783269,
+            -38.95501595253243
+          ],
+          "type": 1,
+          "direction": 0,
+          "signage": 1,
+          "statisticData": [],
+          "bikePassageNumber": 0,
+          "averageMonitoringData": [],
+          "peakMonitoringData": [],
+          "valleyMonitoringData": [],
+          "bikeWayQuality": null
+        },
+        {
+          "ID": "Feira_de_Santana-BR-P1-S2",
+          "P1": [
+            -12.26002063783269,
+            -38.95501595253243
+          ],
+          "P2": [
+            -12.2558106495222,
+            -38.95481515670223
+          ],
+          "type": 0,
+          "direction": 2,
+          "signage": 0,
+          "statisticData": [],
+          "bikePassageNumber": 0,
+          "averageMonitoringData": [],
+          "peakMonitoringData": [],
+          "valleyMonitoringData": [],
+          "bikeWayQuality": null
+        }
+      ]
+    },
+    {
+      "ID": "Feira_de_Santana-BR-P2",
+      "constructionDate": "02/02/2021",
+      "maintenanceDate": "02/03/2021",
+      "inspectionDate": "02/03/2021",
+      "inspectionFeedback": "VB",
+      "stretches": [
+        {
+          "ID": "Feira_de_Santana-BR-P2-S1",
+          "P1": [
+            -12.257729504029106,
+            -38.95577592041933
+          ],
+          "P2": [
+            -12.258063555067247,
+            -38.95124533258551
+          ],
+          "type": 1,
+          "direction": 2,
+          "signage": 1,
+          "statisticData": [],
+          "bikePassageNumber": 0,
+          "averageMonitoringData": [],
+          "peakMonitoringData": [],
+          "valleyMonitoringData": [],
+          "bikeWayQuality": null
+        },
+        {
+          "ID": "Feira_de_Santana-BR-P2-S2",
+          "P1": [
+            -12.258063555067247,
+            -38.95124533258551
+          ],
+          "P2": [
+            -12.255874275994563,
+            -38.95067091416719
+          ],
+          "type": 1,
+          "direction": 2,
+          "signage": 1,
+          "statisticData": [],
+          "bikePassageNumber": 0,
+          "averageMonitoringData": [],
+          "peakMonitoringData": [],
+          "valleyMonitoringData": [],
+          "bikeWayQuality": null
+        }
+      ]
+    }
+  ]
+}
