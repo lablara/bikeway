@@ -1,57 +1,64 @@
 # coding: utf-8
-
+import sys
+import json
+from datetime import datetime
+import os
+from os import listdir
+from os.path import isfile, join
 import numpy as np
 import matplotlib.pyplot as plt
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
-import csv
+
+sys.path.append('../model/')
+from city import City
+from classifiersample import ClassifierSample
+
 
 def main():
-    #µg/m³, dB(A), uV, C, lux, Occurrences/month, Occurrences/month, (none, shared, isolated)
-    type = list()
-    input = list()
-    output = list()
+    cities = list()
+    print("\n######################################################## CLASSIFIER ##############################################\n")
+    #Load cities paths------------------------------------------------------------------------------
+    print("[INFO] Importing cities data from BikeWay Processor")
+    bikePathGenPath = "processorInput/BikePathGenerator/"
+    bikePathGenFiles = [f for f in listdir(bikePathGenPath) if isfile(join(bikePathGenPath, f))]
+    #Gets each city file
+    nCities = 1
+    for bikePathGenFile in bikePathGenFiles:
+        print("  "+str(nCities)+". "+bikePathGenFile.replace(".json",""))
+        cities.append(importCity(bikePathGenFile))
+        nCities+=1
 
-    with open('input.csv') as csvfile:
-        filereader = csv.reader(csvfile, delimiter=',')
-        firstLine = True
-        for row in filereader:
-            if firstLine is True:
-                firstLine = False
-                type = row
-            else:
-                input = list()
-                for data in row:
-                    try:
-                        input.append(float(data))
-                    except:
-                        input.append(str(data))
+    print("\n---------------------------------------------------------------------------------------------------------------------\n")
 
+    print("[INFO] Classifying cities paths stretches")
+    #Get new city----------------------------------------------------------------------------------
+    nCities = 1
+    for city in cities:
+        print("  "+str(nCities)+". "+city.ID)
+        print("    > Monitoring weights: "+str(city.monitoringDataWeights))
+        print("    > Statistic weights: "+str(city.statisticDataWeights))
 
-                print("[INFO] Input")
-                for index in range(8):
-                    print ("  ("+str(index)+") "+str(input[index])+" "+type[index])
-                print("")
-
-                variables_levels = computeLevels(input)
-                M1_level, M2_level = computeMean(variables_levels)
-                output.append(computeQuality(M1_level, M2_level))
-
-                print("--------------------------------------------------------")
-
-        filewriter = open('output.csv', 'w')
-        with filewriter:
-            writer = csv.writer(filewriter)
-            writer.writerow(['M1','M2', 'BikeWay', 'Color'])
-            for row in output:
-                writer.writerow(row)
-
-
-def computeGaussianFunction(x, sigma, u):
-    return np.exp(-np.power(x - u, 2.) / (2 * np.power(sigma, 2.)))
+        nPaths = 1
+        for path in city.paths:
+            print("    > Path "+str(nPaths)+": "+path.ID)
+            nStretches = 1
+            for stretch in path.stretches:
+                print("      - Stretch "+str(nStretches)+": "+stretch.ID)
+                classifierSample = ClassifierSample(stretch.ID ,city.monitoringDataWeights, city.statisticDataWeights, stretch.averageMonitoringData, stretch.statisticData, stretch.type)
+                print("        . Classifier input: "+str(classifierSample.data))
+                print("        . Input levels: ")
+                sampleLevels = computeLevels(classifierSample.data)
+                M1Level, M2Level = computeMean(sampleLevels, city.monitoringDataWeights, city.statisticDataWeights)
+                print("        . Stretch quality")
+                bikeWayQuality = computeQuality(M1Level, M2Level)
+                stretch.bikeWayQuality = bikeWayQuality
+                nStretches+=1
+            nPaths+=1
+        exportCity(city)
+        nCities += 1
 
 def computeLevels(input):
-    print("[INFO] Compute variables levels")
     output = list()
     xmin = 0
     xmax = 0
@@ -115,7 +122,7 @@ def computeLevels(input):
         #Get gaussian levels and translate
         y = float("{:.2f}".format(computeGaussianFunction(x, sigma, u)))
         output.append(y)
-        print("  ("+str(index)+") "+str(y)+",\tsigma = "+str(sigma)+" u = "+str(u))
+        print("          ["+str(index+1)+"] "+str(x)+" -> "+str(y)+"\t sigma = "+str(sigma)+" u = "+str(u))
 
     #Get literal level
     x = input[7]
@@ -126,49 +133,41 @@ def computeLevels(input):
     elif x == "Isolated":
         y = 0.0
     output.append(y)
-    print("  (7) "+str(y))
-    print("")
+    print("          [8] "+x+" -> "+str(y))
 
     return output
 
-def computeMean(input):
-    print("[INFO] Compute mean")
+def computeGaussianFunction(x, sigma, u):
+    return np.exp(-np.power(x - u, 2.) / (2 * np.power(sigma, 2.)))
+
+def computeMean(input, M1_weights, M2_weights):
     #Metric groups
     M1_values = input[0:5]
     M2_values = input[5:8]
 
-    #Groups
-    #µg/m³, dB(A), uV, C, lux
-    M1_weights = [0.2, 0.2, 0.2, 0.2, 0.2]
-    #accidents/month, occurrences/month, lane
-    M2_weights = [0.333333, 0.333333, 0.333333]
-
     M1_level = 0
     i = 0
-    print("  M1 Group")
+    print("        . M1: Monitoring data")
     for y in M1_values:
-        print ("  ("+str(i)+") "+str(y)+" * "+str(M1_weights[i])+" = "+"{:.2f}".format(y * M1_weights[i]))
+        print ("          ["+str(i+1)+"] "+str(y)+" * "+str(M1_weights[i])+" = "+"{:.2f}".format(y * M1_weights[i]))
         M1_level = M1_level + (y * M1_weights[i])
         i = i + 1
     M1_level = float("{:.2f}".format(M1_level))
-    print("    Level: "+str(M1_level))
+    print("          Level: "+str(M1_level))
 
     M2_level = 0
     i = 0
-    print("  M2 Group")
+    print("        . M2: Infrastructure data")
     for y in M2_values:
-        print ("  ("+str(i+5)+") "+str(y)+" * "+str(M2_weights[i])+" = "+"{:.2f}".format(y * M2_weights[i]))
+        print ("          ["+str(i+6)+"] "+str(y)+" * "+str(M2_weights[i])+" = "+"{:.2f}".format(y * M2_weights[i]))
         M2_level = M2_level + (y * M2_weights[i])
         i = i + 1
     M2_level = float("{:.2f}".format(M2_level))
-    print("    Level: "+str(M2_level))
-    print("")
+    print("          Level: "+str(M2_level))
 
     return (M1_level, M2_level)
 
 def computeQuality(M1_level, M2_level):
-    print("[INFO] Compute quality")
-
     #INPUT-------------------------------------------------------------------------
     M1 = ctrl.Antecedent(np.arange(0, 1.0, 0.01), 'M1 level')
     M2 = ctrl.Antecedent(np.arange(0, 1.0, 0.01), 'M2 level')
@@ -196,32 +195,27 @@ def computeQuality(M1_level, M2_level):
     BikeWay_simulator.compute()
     BikeWay_level = BikeWay_simulator.output['BikeWay']
 
-    M1_name = numericToName(M1_level)
-    M2_name = numericToName(M2_level)
+    M1Quality = numericToName(M1_level)
+    M2Quality = numericToName(M2_level)
 
-    BikeWay_name = "Very Bad"
-    BikeWay_color = "Red"
-    if (M1_name == "Bad" and (M2_name == 'Bad' or M2_name == 'Moderate')) or (M1_name == "Moderate" and M2_name == 'Bad'):
-        BikeWay_name = "Bad"
-        BikeWay_color = "Orange"
-    elif (M1_name == "Bad" and (M2_name == "Good" or M2_name == "Very Good" )) or (M1_name == "Moderate" and M2_name == "Moderate") or ((M1_name == "Good" or M1_name == "Very Good") and M2_name == "Bad"):
+    bikeWayQuality = "Very Bad"
+    if (M1Quality == "Bad" and (M2Quality == 'Bad' or M2Quality == 'Moderate')) or (M1Quality == "Moderate" and M2Quality == 'Bad'):
+        bikeWayQuality = "Bad"
+    elif (M1Quality == "Bad" and (M2Quality == "Good" or M2Quality == "Very Good" )) or (M1Quality == "Moderate" and M2Quality == "Moderate") or ((M1Quality == "Good" or M1Quality == "Very Good") and M2Quality == "Bad"):
         BikeWay_name = "Moderate"
-        BikeWay_color = "Yellow"
-    elif (M1_name == "Moderate" and (M2_name == "Good" or M2_name == "Very Good")) or (M1_name == "Good" and (M2_name == "Moderate" or M2_name == "Good")) or (M1_name == "Very Good" and M2_name == "Moderate"):
+    elif (M1Quality == "Moderate" and (M2Quality == "Good" or M2Quality == "Very Good")) or (M1Quality == "Good" and (M2Quality == "Moderate" or M2Quality == "Good")) or (M1Quality == "Very Good" and M2Quality == "Moderate"):
         BikeWay_name = "Good"
-        BikeWay_color = "Green"
-    elif (M1_name == "Good" or M1_name == "Very Good") and (M2_name == "Good" or M2_name == "Very Good"):
+    elif (M1Quality == "Good" or M1Quality == "Very Good") and (M2Quality == "Good" or M2Quality == "Very Good"):
         BikeWay_name = "Very Good"
-        BikeWay_color = "Blue"
 
-    print("  M1 level = "+M1_name)
-    print("  M2 level = "+M2_name)
-    print("  BikeWay level = "+BikeWay_name+"/"+BikeWay_color+" ("+str(BikeWay_level)+")")
+    print("          M1 quality = "+M1Quality)
+    print("          M2 quality = "+M2Quality)
+    print("          BikeWay quality = "+bikeWayQuality+" ("+str(BikeWay_level)+")")
 
     #BikeWay.view(sim=BikeWay_simulator)
     #plt.show()
 
-    return M1_name, M2_name, BikeWay_name, BikeWay_color
+    return encodeQuality(bikeWayQuality)
 
 def numericToName(value):
     limits = [0.12375, 0.37125, 0.61875, 0.86625]
@@ -238,6 +232,121 @@ def numericToName(value):
 
     return name
 
+def encodeQuality(quality):
+    code = 4
+    if quality == "Very Bad":
+        code = 0
+    elif quality == "Bad":
+        code = 1
+    elif quality == "Moderate":
+        code = 2
+    elif quality == "Good":
+        code = 3
+    return code
+
+def importCity(cityFileName):
+    #City file name
+    fileName = "classifierInput/"+cityFileName
+    #City object
+    city = None
+
+    with open(fileName) as infile:
+        #Loads city JSON file
+        cityData = json.load(infile)
+
+        #Loads city info by JSON data
+        city = City(cityFileName.replace(".json", ''), cityData['statisticDataWeights'], cityData['monitoringDataWeights'])
+        print("    > Monitoring weights: "+str(cityData['monitoringDataWeights']))
+        print("    > Statistic weights: "+str(cityData['statisticDataWeights']))
+
+        pathCount = 1
+        for pathData in cityData['paths']:
+            print("    > Path "+str(pathCount)+": "+pathData['ID'])
+            print("      - Construction date: "+pathData['constructionDate'])
+            print("      - Maintenance date: "+pathData['maintenanceDate'])
+            print("      - Inspection date: "+pathData['inspectionDate'])
+            print("      - Inspection feedback: "+str(pathData['inspectionFeedback']))
+
+            #Loads path info by JSON data
+            path = city.insertPath(pathData['ID'], pathData['constructionDate'], pathData['maintenanceDate'], pathData['inspectionDate'], pathData['inspectionFeedback'])
+            stretchCount = 1
+            #Loads stretch info by JSON data
+            for stretchData in pathData['stretches']:
+                print("      - Stretch "+str(stretchCount)+": "+stretchData['ID'])
+                print("        . Type: "+str(stretchData['type']))
+                print("        . Signage: "+str(stretchData['signage']))
+                directionSymbol = "<-->"
+                if stretchData['direction'] == 1:
+                    directionSymbol = "-->"
+                elif stretchData['direction'] == 2:
+                    directionSymbol = "<--"
+                print("        . Points connection: "+str(stretchData['P1'])+" "+directionSymbol+" "+str(stretchData['P2']))
+                print("        . Statistic data: "+str(stretchData['statisticData']))
+                print("        . Bike passage number: "+str(stretchData['bikePassageNumber']))
+                print("        . Average monitoring variables: "+str(stretchData['averageMonitoringData']))
+                print("        . Peak monitoring variables: "+str(stretchData['peakMonitoringData']))
+                print("        . Valley monitoring variables: "+str(stretchData['valleyMonitoringData']))
+
+                stretch = path.insertStretch(stretchData['ID'], stretchData['P1'], stretchData['P2'], stretchData['type'], stretchData['direction'], stretchData['signage'])
+                stretch.statisticData = stretchData['statisticData']
+                stretch.bikePassageNumber = stretchData['bikePassageNumber']
+                stretch.averageMonitoringData = stretchData['averageMonitoringData']
+                stretch.peakMonitoringData = stretchData['peakMonitoringData']
+                stretch.valleyMonitoringData = stretchData['valleyMonitoringData']
+
+                stretchCount+=1
+            pathCount+=1
+
+    os.system("sudo rm "+fileName)
+
+    return city
+
+def exportCity(city):
+    #File name
+    today = datetime.today()
+    monthYear = str(today.month)+"-"+str(today.year)
+    fileName = "mapgeneratorInput/"+city.ID+"_"+monthYear+".json"
+    #File JSON data
+    fileData = {}
+
+    #Insert city weights data in JSON
+    fileData['statisticDataWeights'] = city.statisticDataWeights
+    fileData['monitoringDataWeights'] = city.monitoringDataWeights
+
+    fileData['paths'] = list()
+    for path in city.paths:
+        pathStretches = list()
+
+        for stretch in path.stretches:
+            #Process all stretch samples
+            stretch.processSamples()
+            #Insert stretch data in JSON
+            pathStretches.append({
+                'ID': stretch.ID,
+                'P1': stretch.P1,
+                'P2': stretch.P2,
+                'type': stretch.type,
+                'direction': stretch.direction,
+                'signage': stretch.signage,
+                'statisticData': stretch.statisticData,
+                'bikePassageNumber': stretch.bikePassageNumber,
+                'averageMonitoringData': stretch.averageMonitoringData,
+                'peakMonitoringData': stretch.peakMonitoringData,
+                'valleyMonitoringData': stretch.valleyMonitoringData,
+                'bikeWayQuality': stretch.bikeWayQuality
+            })
+        #Insert path data in JSON
+        fileData['paths'].append({
+            'ID': path.ID,
+            'constructionDate': path.constructionDate,
+            'maintenanceDate': path.maintenanceDate,
+            'inspectionDate': path.inspectionDate,
+            'inspectionFeedback': path.inspectionFeedback,
+            'stretches': pathStretches
+        })
+
+    with open(fileName, 'w') as outfile:
+        json.dump(fileData, outfile, indent=2)
 
 if __name__ == "__main__":
     main()

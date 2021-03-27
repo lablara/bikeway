@@ -20,3 +20,4 @@ class Path:
         stretch = Stretch(ID, P1, P2, type, direction, signage)
         #Add in stretches list
         self.stretches.append(stretch)
+        return stretch
