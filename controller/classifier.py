@@ -20,13 +20,13 @@ def main():
     print("\n######################################################## CLASSIFIER ##############################################\n")
     #Load cities paths------------------------------------------------------------------------------
     print("[INFO] Importing cities data from BikeWay Processor")
-    bikePathGenPath = "processorInput/BikePathGenerator/"
-    bikePathGenFiles = [f for f in listdir(bikePathGenPath) if isfile(join(bikePathGenPath, f))]
+    processorPath = "classifierInput/"
+    processorFiles = [f for f in listdir(processorPath) if isfile(join(processorPath, f))]
     #Gets each city file
     nCities = 1
-    for bikePathGenFile in bikePathGenFiles:
-        print("  "+str(nCities)+". "+bikePathGenFile.replace(".json",""))
-        cities.append(importCity(bikePathGenFile))
+    for processorFile in processorFiles:
+        print("  "+str(nCities)+". "+processorFile.replace(".json",""))
+        cities.append(importCity(processorFile))
         nCities+=1
 
     print("\n---------------------------------------------------------------------------------------------------------------------\n")
@@ -54,6 +54,7 @@ def main():
                 bikeWayQuality = computeQuality(M1Level, M2Level)
                 stretch.bikeWayQuality = bikeWayQuality
                 nStretches+=1
+
             nPaths+=1
         exportCity(city)
         nCities += 1
@@ -318,8 +319,6 @@ def exportCity(city):
         pathStretches = list()
 
         for stretch in path.stretches:
-            #Process all stretch samples
-            stretch.processSamples()
             #Insert stretch data in JSON
             pathStretches.append({
                 'ID': stretch.ID,

@@ -1,72 +1,232 @@
 import reverse_geocode
 import folium
+from os import listdir
+from os.path import isfile, join
+import json
+from collections import namedtuple
+import numpy as np
+import math
 
-class MapGenerator:
-    map = None
-    location = None
+import sys
+sys.path.append('../model/')
+from city import City
 
-    def __init__(self):
-        self.map = folium.Map(location=[-12.280265953993627, -38.96356796067759], zoom_start=13)
+def main(monthYear, userLocation):
+    map = folium.Map(location=userLocation, zoom_start=13)
+    folium.Marker(location=userLocation, popup="You are here").add_to(map)
+    cities = list()
 
-        #CHANGE TO DATE
-        #Translates request coordinate to city/country
-        coordinate = (-12.280265953993627, -38.96356796067759),(0, 0)
-        reverseCoordinate = reverse_geocode.search(coordinate)[0]
-        location = reverseCoordinate['city'] + "_" + reverseCoordinate['country_code']
-        self.location = location.replace(' ', '_')
+    print("\n######################################################## MAP GENERATOR ##############################################\n")
+    #Load cities paths------------------------------------------------------------------------------
+    print("[INFO] Importing cities data from BikeWay Classifier")
+    classifierPath = "processorInput/BikePathGenerator/"
+    classifierFiles = [f for f in listdir(classifierPath) if isfile(join(classifierPath, f))]
+    #Gets each city file
+    nCities = 1
+    for classifierFile in classifierFiles:
+        print("  "+str(nCities)+". "+classifierFile.replace(".json",""))
+        cities.append(importCity(classifierFile.replace(".json","_"+monthYear+".json")))
+        nCities+=1
 
-    def generateMap(self):
-        self.map.save(self.location+".html")
+    print("\n---------------------------------------------------------------------------------------------------------------------\n")
 
-    def insertBikePath(self, path, quality):
-        color = None
-        if quality == "VG":
-            color = 'blue'
-        elif quality == "G":
-            color = 'green'
-        elif quality == "M":
-            color = 'yellow'
-        elif quality == "B":
-            color = 'orange'
-        elif quality == "VB":
-            color = 'red'
+    print("[INFO] Importing variables information")
+    variablesInfo = importVariables()
+    print("  Group 1: Environment")
+    for variable in variablesInfo['monitoring']:
+        print("    > "+variable[0]+" in "+variable[1])
+    print("  Group 2: Infrastructure")
+    for variable in variablesInfo['statistic']:
+        print("    > "+variable[0]+" in "+variable[1])
 
-        folium.PolyLine(path, color=color,  weight=8, opacity=0.5).add_to(self.map)
+    print("\n---------------------------------------------------------------------------------------------------------------------\n")
 
-    def insertMonitoringPoint(self, point):
-        folium.Marker(location=point).add_to(self.map)
+    print("[INFO] Plotting cities paths stretches on map")
+    #Get new city----------------------------------------------------------------------------------
+    nCities = 1
+    for city in cities:
+        print("  "+str(nCities)+". "+city.ID)
+        for path in city.paths:
+            for stretch in path.stretches:
+                print("    > Plotting "+stretch.ID)
+                insertBikePath(map, [stretch.P1, stretch.P2], stretch.type, stretch.direction, stretch.bikeWayQuality, getPopupLegend(stretch, variablesInfo))
+    map.save("webapplicationInput/"+monthYear+".html")
 
-#-------------------------------------------------------------------------------------
-#PATH 1
-place_lat = [-12.259737269514789, -12.26002063783269, -12.2558106495222]
-place_lng = [-38.96369536812054, -38.95501595253243, -38.95481515670223]
+def getPopupLegend(stretch, variablesInfo):
+    signage = "high"
+    if stretch.signage == 0:
+        signage = "none"
+    elif stretch.signage == 1:
+        signage = "low"
 
-path1 = []
-for i in range(len(place_lat)):
-    path1.append([place_lat[i], place_lng[i]])
+    popupLegend="""
+    <font size="2"><b>{id}</b></font><br>
+    <font size="1.5"><b>Size</b></font></br>
+    <font size="1">{size}m</font></br>
+    <font size="1.5"><b>Signage</b></font></br>
+    <font size="1">{signage}</font></br>
+    <font size="1.5"><b>Monitoring samples</b></font></br>
+    <font size="1">{bikePassageNumber}</font></br>
+    """.format(id=stretch.ID, size=stretch.getDistance(), signage=signage, bikePassageNumber=stretch.bikePassageNumber)
 
-#PATH 2
-place_lat = [-12.257729504029106, -12.258063555067247, -12.255874275994563]
-place_lng = [-38.95577592041933, -38.95124533258551, -38.95067091416719]
+    for index in range(len(variablesInfo["monitoring"])):
+        popupLegend += """
+        <font size="1.5"><b>{name}</b></font></br>
+        <font size="1">{average}{unit}&ensp; <i>(Min: {valley} &nbsp; Max: {peak})</i></font></br>
+        """.format(name = variablesInfo["monitoring"][index][0], average = int(stretch.averageMonitoringData[index]), peak = int(stretch.peakMonitoringData[index])
+        , valley = int(stretch.valleyMonitoringData[index]), unit = variablesInfo["monitoring"][index][1])
 
-path2 = []
-for i in range(len(place_lat)):
-    path2.append([place_lat[i], place_lng[i]])
+    for index in range(len(variablesInfo["statistic"]) - 1):
+        popupLegend += """<font size="1.5"><b>{name}</b></br>{value}{unit}</font><br>
+        """.format(name = variablesInfo["statistic"][index][0], value = int(stretch.statisticData[index]), unit = variablesInfo["statistic"][index][1])
 
-mg = MapGenerator()
-mg.insertBikePath(path1, "VG")
-mg.insertBikePath(path2, "VB")
+    return popupLegend
 
-#POINTS IN PATH 1
-mg.insertMonitoringPoint([-12.259722626063445, -38.96313809688914])
-mg.insertMonitoringPoint([-12.259769483899554, -38.96108073013457])
-mg.insertMonitoringPoint([-12.25992365599116, -38.95654045755573])
-mg.insertMonitoringPoint([-12.25997504666832, -38.9552958268488])
-mg.insertMonitoringPoint([-12.2593959300763, -38.954920618973716])
-mg.insertMonitoringPoint([-12.258729163246192, -38.954969159257566])
-mg.insertMonitoringPoint([-12.256784506447909, -38.954910195567436])
-mg.insertMonitoringPoint([-12.255970627309178, -38.954865972799844])
+def insertBikePath(map, path, type, direction, quality , popupLegend):
+    color = None
+    if quality == 4:
+        color = 'blue'
+    elif quality == 3:
+        color = 'green'
+    elif quality == 2:
+        color = 'yellow'
+    elif quality == 1:
+        color = 'orange'
+    elif quality == 0:
+        color = 'red'
 
-#POINTS IN PATH 2
+    dash_array = 0
+    if type == 0:
+        dash_array = 20
+    elif type == 1:
+        dash_array = 10
 
-mg.generateMap()
+    popup = folium.Popup(popupLegend, max_width=180,min_width=180)
+    folium.PolyLine(path, color=color,  weight=8, opacity=0.5, popup=popup, dash_array=dash_array).add_to(map)
+
+    arrows = list()
+    if direction == 0:
+        arrows = getArrows([path[0],path[1]], color)
+        arrows = arrows + getArrows([path[1],path[0]], color)
+    elif direction == 1:
+        arrows = getArrows([path[0],path[1]], color)
+    elif direction == 2:
+        arrows = getArrows([path[1],path[0]], color)
+
+    for arrow in arrows:
+        arrow.add_to(map)
+
+def getArrows(locations, color):
+    size = 3
+    n_arrows = 5
+
+    Point = namedtuple('Point', field_names=['lat', 'lon'])
+
+    # creating point from Point named tuple
+    point1 = Point(locations[0][0], locations[0][1])
+    point2 = Point(locations[1][0], locations[1][1])
+
+    # calculate the rotation required for the marker.
+    #Reducing 90 to account for the orientation of marker
+    # Get the degree of rotation
+    angle = get_angle(point1, point2) - 90
+
+    # get the evenly space list of latitudes and longitudes for the required arrows
+
+    arrow_latitude = np.linspace(point1.lat, point2.lat, n_arrows + 2)[1:n_arrows+1]
+    arrow_longitude = np.linspace(point1.lon, point2.lon, n_arrows + 2)[1:n_arrows+1]
+
+    final_arrows = []
+
+    #creating each "arrow" and appending them to our arrows list
+    for points in zip(arrow_latitude, arrow_longitude):
+        final_arrows.append(folium.RegularPolygonMarker(location=points, color = color, fill_color=color, number_of_sides=3, radius=size, rotation=angle))
+    return final_arrows
+
+def get_angle(p1, p2):
+    longitude_diff = np.radians(p2.lon - p1.lon)
+
+    latitude1 = np.radians(p1.lat)
+    latitude2 = np.radians(p2.lat)
+
+    x_vector = np.sin(longitude_diff) * np.cos(latitude2)
+    y_vector = (np.cos(latitude1) * np.sin(latitude2)
+        - (np.sin(latitude1) * np.cos(latitude2)
+        * np.cos(longitude_diff)))
+    angle = np.degrees(np.arctan2(x_vector, y_vector))
+
+    # Checking and adjustring angle value on the scale of 360
+    if angle < 0:
+        return angle + 360
+    return angle
+
+def importCity(cityFileName):
+    #City file name
+    fileName = "mapgeneratorInput/"+cityFileName
+    #City object
+    city = None
+
+    with open(fileName) as infile:
+        #Loads city JSON file
+        cityData = json.load(infile)
+
+        #Loads city info by JSON data
+        city = City(cityFileName.replace(".json", ''), cityData['statisticDataWeights'], cityData['monitoringDataWeights'])
+        print("    > Monitoring weights: "+str(cityData['monitoringDataWeights']))
+        print("    > Statistic weights: "+str(cityData['statisticDataWeights']))
+
+        pathCount = 1
+        for pathData in cityData['paths']:
+            print("    > Path "+str(pathCount)+": "+pathData['ID'])
+            print("      - Construction date: "+pathData['constructionDate'])
+            print("      - Maintenance date: "+pathData['maintenanceDate'])
+            print("      - Inspection date: "+pathData['inspectionDate'])
+            print("      - Inspection feedback: "+str(pathData['inspectionFeedback']))
+
+            #Loads path info by JSON dataself.location
+            path = city.insertPath(pathData['ID'], pathData['constructionDate'], pathData['maintenanceDate'], pathData['inspectionDate'], pathData['inspectionFeedback'])
+            stretchCount = 1
+            #Loads stretch info by JSON data
+            for stretchData in pathData['stretches']:
+                print("      - Stretch "+str(stretchCount)+": "+stretchData['ID'])
+                print("        . Type: "+str(stretchData['type']))
+                print("        . Signage: "+str(stretchData['signage']))
+                directionSymbol = "<-->"
+                if stretchData['direction'] == 1:
+                    directionSymbol = "-->"
+                elif stretchData['direction'] == 2:
+                    directionSymbol = "<--"
+                print("        . Points connection: "+str(stretchData['P1'])+" "+directionSymbol+" "+str(stretchData['P2']))
+                print("        . Statistic data: "+str(stretchData['statisticData']))
+                print("        . Bike passage number: "+str(stretchData['bikePassageNumber']))
+                print("        . Average monitoring variables: "+str(stretchData['averageMonitoringData']))
+                print("        . Peak monitoring variables: "+str(stretchData['peakMonitoringData']))
+                print("        . Valley monitoring variables: "+str(stretchData['valleyMonitoringData']))
+                print("        . BikeWay Quality: "+str(stretchData['bikeWayQuality']))
+
+                stretch = path.insertStretch(stretchData['ID'], stretchData['P1'], stretchData['P2'], stretchData['type'], stretchData['direction'], stretchData['signage'])
+                stretch.statisticData = stretchData['statisticData']
+                stretch.bikePassageNumber = stretchData['bikePassageNumber']
+                stretch.averageMonitoringData = stretchData['averageMonitoringData']
+                stretch.peakMonitoringData = stretchData['peakMonitoringData']
+                stretch.valleyMonitoringData = stretchData['valleyMonitoringData']
+                stretch.bikeWayQuality = stretchData['bikeWayQuality']
+                stretchCount+=1
+            pathCount+=1
+
+    return city
+
+def importVariables():
+    #Variables file name
+    fileName = "mapgeneratorInput/variables.json"
+    #Variables object
+    variablesInfo = None
+
+    with open(fileName) as infile:
+        #Loads city JSON file
+        variablesInfo = json.load(infile)
+
+    return variablesInfo
+
+if __name__ == "__main__":
+    main("3-2021", [-12.280265953993627, -38.96356796067759])

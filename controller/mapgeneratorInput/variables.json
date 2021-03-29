@@ -1,0 +1,14 @@
+{
+  "monitoring": [
+    ["Air polution", "µg/m³"],
+    ["Noise polution", "dB"],
+    ["UV level", ""],
+    ["Thermal sensation", "°C"],
+    ["Luminosity", "lux"]
+  ],
+  "statistic": [
+    ["Accidents",""],
+    ["Ocurrences",""],
+    ["Situation",""]
+  ]
+}

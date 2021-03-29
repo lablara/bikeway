@@ -1,6 +1,7 @@
-import matplotlib.pyplot as plt
 from shapely.geometry import LineString as shls
 from shapely.geometry import Point as shpt
+import haversine as hs
+from haversine import Unit
 
 class Stretch:
     def __init__(self, ID, P1, P2, type, direction, signage):
@@ -39,9 +40,17 @@ class Stretch:
         pointLineDistance = shpt(point).distance(stretchLine)
 
         #Checks if distance is short
-        if pointLineDistance < 0.00009:
+        if pointLineDistance <  0.00010061046804398176:
             return True
         return False
+
+    def getDistance(self, P1 = None, P2 = None):
+        #Stretch distance
+        if P1 == None or P2 == None:
+            P1 = self.P1
+            P2 = self.P2
+        return int(hs.haversine(P1, P2, unit=Unit.METERS))
+
 
     def accountSample(self, data):
         #First account then starts all lists

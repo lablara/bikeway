@@ -4,6 +4,8 @@ import csv
 import reverse_geocode
 from os import listdir
 from os.path import isfile, join
+import matplotlib.pyplot as plt
+from datetime import datetime
 
 sys.path.append('../model/')
 from city import City
@@ -54,6 +56,9 @@ def main():
     for city in cities:
         print("  "+str(nCities)+". "+city.ID)
         statisticData = list()
+        detectedPoints = list()
+        undetectedPoints = list()
+
         #Process statistical data------------------------------------------------------------------
         for statisticSample in statisticSamples:
             if statisticSample.city == city.ID:
@@ -67,16 +72,47 @@ def main():
                 for path in city.paths:
                     for stretch in path.stretches:
                         stretch.statisticData = statisticData.copy()
+
                         if stretch.containsPoint(monitoringSample.coordinate):
+                            detectedPoints.append(monitoringSample.coordinate)
                             print("    > Sample "+str(nSamples)+": "+monitoringSample.deviceID+"-"+monitoringSample.date+"-"+monitoringSample.time)
                             print("      - Stretch "+str(nStretches)+": "+stretch.ID)
                             stretch.accountSample(monitoringSample.data)
                             break
+                        else:
+                            undetectedPoints.append(monitoringSample.coordinate)
                         nStretches+=1
             nSamples+=1
         #Export processed city data------------------------------------------------------------------
         exportCity(city)
+        exportCityGraph(city.ID,city.getPathsPoints(), detectedPoints, undetectedPoints)
         nCities+=1
+
+def exportCityGraph(cityID, cityPathsPoints, detectedPoints, undetectedPoints):
+    for cityPathPoints in cityPathsPoints:
+        x = list()
+        y = list()
+        for cityPathPoint in cityPathPoints:
+            x.append(cityPathPoint[1])
+            y.append(cityPathPoint[0])
+        plt.plot(x, y, marker = 'o', color = 'black')
+
+    for undetectedPoint in undetectedPoints:
+        plt.plot(undetectedPoint[1], undetectedPoint[0], marker = 'o', color = 'red')
+
+    for detectedPoint in detectedPoints:
+        plt.plot(detectedPoint[1], detectedPoint[0], marker = 'o', color = 'green')
+
+    today = datetime.today()
+    monthYear = str(today.month)+"-"+str(today.year)
+    fileName = "processorInput/citiesSamplesGraphs/"+cityID+"_"+monthYear+".png"
+
+    plt.legend(loc="upper left")
+    plt.title(cityID+"_"+monthYear)
+    plt.xlabel('Longitude (°)')
+    plt.ylabel('Latitude (°)')
+    plt.grid()
+    plt.savefig(fileName)
 
 def exportCity(city):
     #File name

@@ -17,3 +17,13 @@ class City:
         #Add in paths list
         self.paths.append(path)
         return path
+
+    def getPathsPoints(self):
+        pathsPoints = list()
+        for path in self.paths:
+            stretchPoints = list()
+            for stretch in path.stretches:
+                stretchPoints.append(stretch.P1)
+            stretchPoints.append(stretch.P2)
+            pathsPoints.append(stretchPoints)
+        return pathsPoints
