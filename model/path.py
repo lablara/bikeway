@@ -1,7 +1,7 @@
 from stretch import Stretch
 
 class Path:
-    def __init__(self, ID, constructionDate, maintenanceDate, inspectionDate, inspectionFeedback):
+    def __init__(self, ID, constructionDate, maintenanceDate, inspectionDate, creator):
         #String in 'Feira_de_Santana-BR-P1' format
         self.ID = ID
         #String with bike path construction date
@@ -10,8 +10,8 @@ class Path:
         self.maintenanceDate = maintenanceDate
         #String with last bike path inspection date
         self.inspectionDate = inspectionDate
-        #Int with last classification by inspector: 0 - VB, 1 - B, 2 - M, 3 - G, 4 - VG
-        self.inspectionFeedback = inspectionFeedback
+        #String with the bike path creator
+        self.creator = creator
         #Bike path stretches list
         self.stretches = list()
 

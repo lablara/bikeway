@@ -51,7 +51,6 @@ class Stretch:
             P2 = self.P2
         return int(hs.haversine(P1, P2, unit=Unit.METERS))
 
-
     def accountSample(self, data):
         #First account then starts all lists
         if self.bikePassageNumber  == 0:

@@ -1,19 +1,20 @@
-import reverse_geocode
 import folium
+from folium.plugins import Search
+import os
 from os import listdir
 from os.path import isfile, join
 import json
 from collections import namedtuple
 import numpy as np
 import math
+from datetime import datetime
 
 import sys
 sys.path.append('../model/')
 from city import City
 
-def main(monthYear, userLocation):
-    map = folium.Map(location=userLocation, zoom_start=13)
-    folium.Marker(location=userLocation, popup="You are here").add_to(map)
+def main():
+    map = folium.Map(location=[-12.280265953993627, -38.96356796067759], height = '91.5%', zoom_start=3, min_zoom = 2, max_bounds=True)
     cities = list()
 
     print("\n######################################################## MAP GENERATOR ##############################################\n")
@@ -21,6 +22,12 @@ def main(monthYear, userLocation):
     print("[INFO] Importing cities data from BikeWay Classifier")
     classifierPath = "processorInput/BikePathGenerator/"
     classifierFiles = [f for f in listdir(classifierPath) if isfile(join(classifierPath, f))]
+    today = datetime.today()
+    month = today.month
+    if month < 10:
+        month = "0"+str(month)
+    monthYear = str(today.year)+"-"+month
+
     #Gets each city file
     nCities = 1
     for classifierFile in classifierFiles:
@@ -50,6 +57,7 @@ def main(monthYear, userLocation):
             for stretch in path.stretches:
                 print("    > Plotting "+stretch.ID)
                 insertBikePath(map, [stretch.P1, stretch.P2], stretch.type, stretch.direction, stretch.bikeWayQuality, getPopupLegend(stretch, variablesInfo))
+                
     map.save("webapplicationInput/"+monthYear+".html")
 
 def getPopupLegend(stretch, variablesInfo):
@@ -181,10 +189,10 @@ def importCity(cityFileName):
             print("      - Construction date: "+pathData['constructionDate'])
             print("      - Maintenance date: "+pathData['maintenanceDate'])
             print("      - Inspection date: "+pathData['inspectionDate'])
-            print("      - Inspection feedback: "+str(pathData['inspectionFeedback']))
+            print("      - Creator: "+str(pathData['creator']))
 
             #Loads path info by JSON dataself.location
-            path = city.insertPath(pathData['ID'], pathData['constructionDate'], pathData['maintenanceDate'], pathData['inspectionDate'], pathData['inspectionFeedback'])
+            path = city.insertPath(pathData['ID'], pathData['constructionDate'], pathData['maintenanceDate'], pathData['inspectionDate'], pathData['creator'])
             stretchCount = 1
             #Loads stretch info by JSON data
             for stretchData in pathData['stretches']:
@@ -214,6 +222,8 @@ def importCity(cityFileName):
                 stretchCount+=1
             pathCount+=1
 
+    os.system("rm "+fileName)
+
     return city
 
 def importVariables():
@@ -229,4 +239,4 @@ def importVariables():
     return variablesInfo
 
 if __name__ == "__main__":
-    main("3-2021", [-12.280265953993627, -38.96356796067759])
+    main()

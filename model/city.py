@@ -11,9 +11,9 @@ class City:
         #BikeWay classifier monitoring group weights list
         self.monitoringDataWeights = monitoringDataWeights.copy()
 
-    def insertPath(self, ID, constructionDate, maintenanceDate, inspectionDate, inspectionFeedback):
+    def insertPath(self, ID, constructionDate, maintenanceDate, inspectionDate, creator):
         #Create new bike path object
-        path = Path(ID, constructionDate, maintenanceDate, inspectionDate, inspectionFeedback)
+        path = Path(ID, constructionDate, maintenanceDate, inspectionDate, creator)
         #Add in paths list
         self.paths.append(path)
         return path

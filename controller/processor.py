@@ -152,7 +152,7 @@ def exportCity(city):
             'constructionDate': path.constructionDate,
             'maintenanceDate': path.maintenanceDate,
             'inspectionDate': path.inspectionDate,
-            'inspectionFeedback': path.inspectionFeedback,
+            'creator': path.creator,
             'stretches': pathStretches
         })
 
@@ -180,10 +180,10 @@ def importCity(cityFileName):
             print("      - Construction date: "+pathData['constructionDate'])
             print("      - Maintenance date: "+pathData['maintenanceDate'])
             print("      - Inspection date: "+pathData['inspectionDate'])
-            print("      - Inspection feedback: "+str(pathData['inspectionFeedback']))
+            print("      - Creator: "+str(pathData['creator']))
 
             #Loads path info by JSON data
-            path = city.insertPath(pathData['ID'], pathData['constructionDate'], pathData['maintenanceDate'], pathData['inspectionDate'], pathData['inspectionFeedback'])
+            path = city.insertPath(pathData['ID'], pathData['constructionDate'], pathData['maintenanceDate'], pathData['inspectionDate'], pathData['creator'])
             stretchCount = 1
             #Loads stretch info by JSON data
             for stretchData in pathData['stretches']:

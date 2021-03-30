@@ -14,7 +14,6 @@ sys.path.append('../model/')
 from city import City
 from classifiersample import ClassifierSample
 
-
 def main():
     cities = list()
     print("\n######################################################## CLASSIFIER ##############################################\n")
@@ -266,10 +265,10 @@ def importCity(cityFileName):
             print("      - Construction date: "+pathData['constructionDate'])
             print("      - Maintenance date: "+pathData['maintenanceDate'])
             print("      - Inspection date: "+pathData['inspectionDate'])
-            print("      - Inspection feedback: "+str(pathData['inspectionFeedback']))
+            print("      - Creator: "+str(pathData['creator']))
 
             #Loads path info by JSON data
-            path = city.insertPath(pathData['ID'], pathData['constructionDate'], pathData['maintenanceDate'], pathData['inspectionDate'], pathData['inspectionFeedback'])
+            path = city.insertPath(pathData['ID'], pathData['constructionDate'], pathData['maintenanceDate'], pathData['inspectionDate'], pathData['creator'])
             stretchCount = 1
             #Loads stretch info by JSON data
             for stretchData in pathData['stretches']:
@@ -298,14 +297,18 @@ def importCity(cityFileName):
                 stretchCount+=1
             pathCount+=1
 
-    os.system("sudo rm "+fileName)
+    os.system("rm "+fileName)
 
     return city
 
 def exportCity(city):
     #File name
     today = datetime.today()
-    monthYear = str(today.month)+"-"+str(today.year)
+    month = today.month
+    if month < 10:
+        month = "0"+str(month)
+        
+    monthYear = str(today.year)+"-"+month
     fileName = "mapgeneratorInput/"+city.ID+"_"+monthYear+".json"
     #File JSON data
     fileData = {}
@@ -340,7 +343,7 @@ def exportCity(city):
             'constructionDate': path.constructionDate,
             'maintenanceDate': path.maintenanceDate,
             'inspectionDate': path.inspectionDate,
-            'inspectionFeedback': path.inspectionFeedback,
+            'creator': path.creator,
             'stretches': pathStretches
         })
 
