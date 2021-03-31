@@ -44,14 +44,17 @@ def main():
             nStretches = 1
             for stretch in path.stretches:
                 print("      - Stretch "+str(nStretches)+": "+stretch.ID)
-                classifierSample = ClassifierSample(stretch.ID ,city.monitoringDataWeights, city.statisticDataWeights, stretch.averageMonitoringData, stretch.statisticData, stretch.type)
-                print("        . Classifier input: "+str(classifierSample.data))
-                print("        . Input levels: ")
-                sampleLevels = computeLevels(classifierSample.data)
-                M1Level, M2Level = computeMean(sampleLevels, city.monitoringDataWeights, city.statisticDataWeights)
-                print("        . Stretch quality")
-                bikeWayQuality = computeQuality(M1Level, M2Level)
-                stretch.bikeWayQuality = bikeWayQuality
+                if stretch.bikePassageNumber > 0:
+                    classifierSample = ClassifierSample(stretch.ID ,city.monitoringDataWeights, city.statisticDataWeights, stretch.averageMonitoringData, stretch.statisticData, stretch.type)
+                    print("        . Classifier input: "+str(classifierSample.data))
+                    print("        . Input levels: ")
+                    sampleLevels = computeLevels(classifierSample.data)
+                    M1Level, M2Level = computeMean(sampleLevels, city.monitoringDataWeights, city.statisticDataWeights)
+                    print("        . Stretch quality")
+                    bikeWayQuality = computeQuality(M1Level, M2Level)
+                    stretch.bikeWayQuality = bikeWayQuality
+                else:
+                    print("        . Does not have monitoring data")
                 nStretches+=1
 
             nPaths+=1
@@ -202,11 +205,11 @@ def computeQuality(M1_level, M2_level):
     if (M1Quality == "Bad" and (M2Quality == 'Bad' or M2Quality == 'Moderate')) or (M1Quality == "Moderate" and M2Quality == 'Bad'):
         bikeWayQuality = "Bad"
     elif (M1Quality == "Bad" and (M2Quality == "Good" or M2Quality == "Very Good" )) or (M1Quality == "Moderate" and M2Quality == "Moderate") or ((M1Quality == "Good" or M1Quality == "Very Good") and M2Quality == "Bad"):
-        BikeWay_name = "Moderate"
+        bikeWayQuality = "Moderate"
     elif (M1Quality == "Moderate" and (M2Quality == "Good" or M2Quality == "Very Good")) or (M1Quality == "Good" and (M2Quality == "Moderate" or M2Quality == "Good")) or (M1Quality == "Very Good" and M2Quality == "Moderate"):
-        BikeWay_name = "Good"
+        bikeWayQuality = "Good"
     elif (M1Quality == "Good" or M1Quality == "Very Good") and (M2Quality == "Good" or M2Quality == "Very Good"):
-        BikeWay_name = "Very Good"
+        bikeWayQuality = "Very Good"
 
     print("          M1 quality = "+M1Quality)
     print("          M2 quality = "+M2Quality)
@@ -307,7 +310,7 @@ def exportCity(city):
     month = today.month
     if month < 10:
         month = "0"+str(month)
-        
+
     monthYear = str(today.year)+"-"+month
     fileName = "mapgeneratorInput/"+city.ID+"_"+monthYear+".json"
     #File JSON data

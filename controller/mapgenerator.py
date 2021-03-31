@@ -57,7 +57,7 @@ def main():
             for stretch in path.stretches:
                 print("    > Plotting "+stretch.ID)
                 insertBikePath(map, [stretch.P1, stretch.P2], stretch.type, stretch.direction, stretch.bikeWayQuality, getPopupLegend(stretch, variablesInfo))
-                
+        nCities+=1
     map.save("webapplicationInput/"+monthYear+".html")
 
 def getPopupLegend(stretch, variablesInfo):
@@ -78,15 +78,31 @@ def getPopupLegend(stretch, variablesInfo):
     """.format(id=stretch.ID, size=stretch.getDistance(), signage=signage, bikePassageNumber=stretch.bikePassageNumber)
 
     for index in range(len(variablesInfo["monitoring"])):
+        average = "--"
+        peak = "--"
+        valley = "--"
+        try:
+            average = int(stretch.averageMonitoringData[index])
+            peak = int(stretch.peakMonitoringData[index])
+            valley = int(stretch.valleyMonitoringData[index])
+        except:
+            None
+
         popupLegend += """
         <font size="1.5"><b>{name}</b></font></br>
         <font size="1">{average}{unit}&ensp; <i>(Min: {valley} &nbsp; Max: {peak})</i></font></br>
-        """.format(name = variablesInfo["monitoring"][index][0], average = int(stretch.averageMonitoringData[index]), peak = int(stretch.peakMonitoringData[index])
-        , valley = int(stretch.valleyMonitoringData[index]), unit = variablesInfo["monitoring"][index][1])
+        """.format(name = variablesInfo["monitoring"][index][0], average = average, peak = peak
+        , valley = valley, unit = variablesInfo["monitoring"][index][1])
 
     for index in range(len(variablesInfo["statistic"]) - 1):
+        statistic = "--"
+        try:
+            statistic = int(stretch.statisticData[index])
+        except:
+            None
+
         popupLegend += """<font size="1.5"><b>{name}</b></br>{value}{unit}</font><br>
-        """.format(name = variablesInfo["statistic"][index][0], value = int(stretch.statisticData[index]), unit = variablesInfo["statistic"][index][1])
+        """.format(name = variablesInfo["statistic"][index][0], value = statistic, unit = variablesInfo["statistic"][index][1])
 
     return popupLegend
 
@@ -102,6 +118,8 @@ def insertBikePath(map, path, type, direction, quality , popupLegend):
         color = 'orange'
     elif quality == 0:
         color = 'red'
+    else:
+        color = 'grey'
 
     dash_array = 0
     if type == 0:

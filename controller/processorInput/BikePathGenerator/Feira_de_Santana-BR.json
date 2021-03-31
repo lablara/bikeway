@@ -22,12 +22,12 @@
         {
           "ID": "Feira_de_Santana-BR-P1-S1",
           "P1": [
-            -12.259737269514789,
-            -38.96369536812054
+            -12.259720085744956,
+            -38.96384053644054
           ],
           "P2": [
-            -12.26002063783269,
-            -38.95501595253243
+            -12.259990743034352,
+            -38.95488161248777
           ],
           "type": 1,
           "direction": 0,
@@ -42,16 +42,56 @@
         {
           "ID": "Feira_de_Santana-BR-P1-S2",
           "P1": [
-            -12.26002063783269,
-            -38.95501595253243
+            -12.259990743034352,
+            -38.95488161248777
           ],
           "P2": [
-            -12.2558106495222,
-            -38.95481515670223
+            -12.260127725044317,
+            -38.95346259700217
           ],
-          "type": 0,
-          "direction": 2,
-          "signage": 0,
+          "type": 1,
+          "direction": 0,
+          "signage": 1,
+          "statisticData": [],
+          "bikePassageNumber": 0,
+          "averageMonitoringData": [],
+          "peakMonitoringData": [],
+          "valleyMonitoringData": [],
+          "bikeWayQuality": null
+        },
+        {
+          "ID": "Feira_de_Santana-BR-P1-S3",
+          "P1": [
+            -12.260127725044317,
+            -38.95346259700217
+          ],
+          "P2": [
+            -12.26101940509521,
+            -38.950774575355126
+          ],
+          "type": 1,
+          "direction": 0,
+          "signage": 1,
+          "statisticData": [],
+          "bikePassageNumber": 0,
+          "averageMonitoringData": [],
+          "peakMonitoringData": [],
+          "valleyMonitoringData": [],
+          "bikeWayQuality": null
+        },
+        {
+          "ID": "Feira_de_Santana-BR-P1-S4",
+          "P1": [
+            -12.26101940509521,
+            -38.950774575355126
+          ],
+          "P2": [
+            -12.27109222492238,
+            -38.937140822079186
+          ],
+          "type": 1,
+          "direction": 0,
+          "signage": 1,
           "statisticData": [],
           "bikePassageNumber": 0,
           "averageMonitoringData": [],

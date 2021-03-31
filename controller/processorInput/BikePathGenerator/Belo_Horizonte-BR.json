@@ -1,0 +1,45 @@
+{
+  "statisticDataWeights": [
+    0.3,
+    0.3,
+    0.3
+  ],
+  "monitoringDataWeights": [
+    0.2,
+    0.2,
+    0.2,
+    0.2,
+    0.2
+  ],
+  "paths": [
+    {
+      "ID": "Belo_Horizonte-BR-P1",
+      "constructionDate": "01/02/2021",
+      "maintenanceDate": "01/03/2021",
+      "inspectionDate": "01/03/2021",
+      "creator": "gov",
+      "stretches": [
+        {
+          "ID": "Belo_Horizonte-BR-P1-S1",
+          "P1": [
+            -19.90624637938908,
+            -43.95708508749772
+          ],
+          "P2": [
+            -19.914043616140972,
+            -43.952295468315974
+          ],
+          "type": 0,
+          "direction": 1,
+          "signage": 0,
+          "statisticData": [],
+          "bikePassageNumber": 0,
+          "averageMonitoringData": [],
+          "peakMonitoringData": [],
+          "valleyMonitoringData": [],
+          "bikeWayQuality": null
+        }
+      ]
+    }
+  ]
+}

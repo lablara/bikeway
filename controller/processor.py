@@ -113,6 +113,7 @@ def exportCityGraph(cityID, cityPathsPoints, detectedPoints, undetectedPoints):
     plt.ylabel('Latitude (°)')
     plt.grid()
     plt.savefig(fileName)
+    plt.clf()
 
 def exportCity(city):
     #File name

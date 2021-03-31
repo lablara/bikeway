@@ -1,0 +1,45 @@
+{
+  "statisticDataWeights": [
+    0.3,
+    0.3,
+    0.3
+  ],
+  "monitoringDataWeights": [
+    0.2,
+    0.2,
+    0.2,
+    0.2,
+    0.2
+  ],
+  "paths": [
+    {
+      "ID": "New_Delhi-IN-P1",
+      "constructionDate": "01/02/2021",
+      "maintenanceDate": "01/03/2021",
+      "inspectionDate": "01/03/2021",
+      "creator": "gov",
+      "stretches": [
+        {
+          "ID": "New_Delhi-IN-P1-S1",
+          "P1": [
+            28.633748416137905,
+            77.22038850856167
+          ],
+          "P2": [
+            28.635284282862738,
+            77.22152127121996
+          ],
+          "type": 0,
+          "direction": 1,
+          "signage": 0,
+          "statisticData": [],
+          "bikePassageNumber": 0,
+          "averageMonitoringData": [],
+          "peakMonitoringData": [],
+          "valleyMonitoringData": [],
+          "bikeWayQuality": null
+        }
+      ]
+    }
+  ]
+}
