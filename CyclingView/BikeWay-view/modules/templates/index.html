@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<head>
+  <title>BikeWay Viewer</title>
+  <style>
+    .monthPicker {
+      position: absolute;
+      top: 92%;
+      left: 1%
+    }
+    .loadButton{
+      width: 80px;
+      height: 50px;
+    }
+    .monthField{
+      width: 150px;
+      height: 50px;
+    }
+    .legendImage{
+      width: 80%;
+      height: 5%;
+    }
+
+  </style>
+</head>
+<body>
+  {% include "map.html" %}
+  <form class="monthPicker" action='/monthChange/' method="post">
+    <button class = "loadButton" name="month_change_button" value="load"> Load map </button>
+    <input class = "monthField" type="month" name="month_change_picker" min="{{firstMonth}}" max="{{lastMonth}}" value="{{currentMonth}}">
+    <img class = "legendImage" src="/static/images/legend-names.png">
+  </form>
+
+
+</body>
+</html>

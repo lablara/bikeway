@@ -1,0 +1,23 @@
+{
+  "statisticDataWeights": [0.3, 0.3, 0.3],
+  "monitoringDataWeights": [0.2, 0.2, 0.2, 0.2, 0.2],
+  "paths": [
+    {
+      "ID": "Feira_de_Santana-BR-C1",
+      "constructionDate": "01/02/2021",
+      "maintenanceDate": "01/03/2021",
+      "inspectionDate": "01/03/2021",
+      "creator": "gov",
+      "stretches": [
+        {
+          "ID": "Feira_de_Santana-BR-C1-S1",
+          "P0": [-12.259720085744956, -38.96384053644054],
+          "P1": [-12.259990743034352,-38.95488161248777],
+          "type": 1.0,
+          "direction": 0,
+          "signage": 1
+        }
+      ]
+    }
+  ]
+}
