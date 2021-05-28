@@ -4,6 +4,7 @@ import os
 from os import listdir
 from os.path import isfile, join
 
+rootPath = "/home/franklin/Desktop/Projetos/iBikeSafe/CyclingView/BikeWay-view/modules/"
 app = Flask(__name__)
 currentMap = None
 
@@ -18,7 +19,7 @@ def monthChange():
     get_map(monthYear)
     return redirect('/')
 
-#Gets the raspberry pi private address
+#Gets the private address
 def get_ip_address():
     ip = str(subprocess.check_output('hostname -I', shell=True).decode('utf-8'))
     return ip
@@ -26,13 +27,13 @@ def get_ip_address():
 def get_map(monthYear):
     global currentMap
     try:
-        os.system("cp ../controller/webapplicationInput/"+monthYear+".html templates/map.html")
+        os.system("cp "+rootPath+"maps/"+monthYear+".html "+rootPath+"templates/map.html")
         currentMap = monthYear
     except:
         None
 
 def available_maps():
-    mapsPath = "../controller/webapplicationInput/"
+    mapsPath = rootPath+"maps/"
     mapsFiles = [f.replace('.html', '') for f in listdir(mapsPath) if isfile(join(mapsPath, f))]
     mapsFiles.sort()
     return mapsFiles

@@ -9,9 +9,9 @@ import numpy as np
 import math
 from datetime import datetime
 
-import sys
-sys.path.append('../model/')
-from city import City
+from util.city import City
+
+rootPath = "/home/franklin/Desktop/Projetos/iBikeSafe/"
 
 def main():
     map = folium.Map(location=[-12.280265953993627, -38.96356796067759], height = '91.5%', zoom_start=3, min_zoom = 2, max_bounds=True)
@@ -19,8 +19,8 @@ def main():
 
     print("\n######################################################## MAP GENERATOR ##############################################\n")
     #Load cities paths------------------------------------------------------------------------------
-    print("[INFO] Importing cities data from BikeWay Classifier")
-    classifierPath = "processorInput/BikePathGenerator/"
+    print("[INFO] Importing cities data from BikeWay system")
+    classifierPath = rootPath+"BikeWay/outputFiles/CyclingView/"
     classifierFiles = [f for f in listdir(classifierPath) if isfile(join(classifierPath, f))]
     today = datetime.today()
     month = today.month
@@ -32,7 +32,7 @@ def main():
     nCities = 1
     for classifierFile in classifierFiles:
         print("  "+str(nCities)+". "+classifierFile.replace(".json",""))
-        cities.append(importCity(classifierFile.replace(".json","_"+monthYear+".json")))
+        cities.append(importCity(classifierFile))
         nCities+=1
 
     print("\n---------------------------------------------------------------------------------------------------------------------\n")
@@ -58,7 +58,81 @@ def main():
                 print("    > Plotting "+stretch.ID)
                 insertBikePath(map, [stretch.P1, stretch.P2], stretch.type, stretch.direction, stretch.bikeWayQuality, getPopupLegend(stretch, variablesInfo))
         nCities+=1
-    map.save("webapplicationInput/"+monthYear+".html")
+
+    folium.plugins.LocateControl().add_to(map)
+    folium.plugins.Geocoder().add_to(map)
+
+    if not os.path.exists(rootPath+"CyclingView/BikeWay-view/modules/maps/"):
+        os.makedirs(rootPath+"CyclingView/BikeWay-view/modules/maps/")
+
+    map.save(rootPath+"CyclingView/BikeWay-view/modules/maps/"+monthYear+".html")
+
+def importCity(cityFileName):
+    #City file name
+    fileName = rootPath+"BikeWay/outputFiles/CyclingView/"+cityFileName
+    #City object
+    city = None
+
+    with open(fileName) as infile:
+        #Loads city JSON file
+        cityData = json.load(infile)
+
+        #Loads city info by JSON data
+        city = City(cityFileName.replace(".json", ''), [], [])
+
+        pathCount = 1
+        for pathData in cityData['paths']:
+            print("    > Path "+str(pathCount)+": "+pathData['ID'])
+            print("      - Construction date: "+pathData['constructionDate'])
+            print("      - Maintenance date: "+pathData['maintenanceDate'])
+            print("      - Inspection date: "+pathData['inspectionDate'])
+            print("      - Creator: "+str(pathData['creator']))
+
+            #Loads path info by JSON dataself.location
+            path = city.insertPath(pathData['ID'], pathData['constructionDate'], pathData['maintenanceDate'], pathData['inspectionDate'], pathData['creator'])
+            stretchCount = 1
+            #Loads stretch info by JSON data
+            for stretchData in pathData['stretches']:
+                print("      - Stretch "+str(stretchCount)+": "+stretchData['ID'])
+                print("        . Signage: "+str(stretchData['signage']))
+                directionSymbol = "<-->"
+                if stretchData['direction'] == 1:
+                    directionSymbol = "-->"
+                elif stretchData['direction'] == 2:
+                    directionSymbol = "<--"
+                print("        . Points connection: "+str(stretchData['P0'])+" "+directionSymbol+" "+str(stretchData['P1']))
+                print("        . Statistic data: "+str(stretchData['statisticData']))
+                print("        . Bike passage number: "+str(stretchData['bikePassageNumber']))
+                print("        . Average monitoring variables: "+str(stretchData['averageMonitoringData']))
+                print("        . Peak monitoring variables: "+str(stretchData['peakMonitoringData']))
+                print("        . Valley monitoring variables: "+str(stretchData['valleyMonitoringData']))
+                print("        . BikeWay Quality: "+str(stretchData['bikeWayQuality']))
+
+                stretch = path.insertStretch(stretchData['ID'], stretchData['P0'], stretchData['P1'], stretchData['statisticData'][2], stretchData['direction'], stretchData['signage'])
+                stretch.statisticData = stretchData['statisticData']
+                stretch.bikePassageNumber = stretchData['bikePassageNumber']
+                stretch.averageMonitoringData = stretchData['averageMonitoringData']
+                stretch.peakMonitoringData = stretchData['peakMonitoringData']
+                stretch.valleyMonitoringData = stretchData['valleyMonitoringData']
+                stretch.bikeWayQuality = stretchData['bikeWayQuality']
+                stretchCount+=1
+            pathCount+=1
+
+    #os.system("rm "+fileName)
+
+    return city
+
+def importVariables():
+    #Variables file name
+    fileName = rootPath+"CyclingView/BikeWay-view/modules/util/variables.json"
+    #Variables object
+    variablesInfo = None
+
+    with open(fileName) as infile:
+        #Loads city JSON file
+        variablesInfo = json.load(infile)
+
+    return variablesInfo
 
 def getPopupLegend(stretch, variablesInfo):
     signage = "high"
@@ -185,76 +259,6 @@ def get_angle(p1, p2):
     if angle < 0:
         return angle + 360
     return angle
-
-def importCity(cityFileName):
-    #City file name
-    fileName = "mapgeneratorInput/"+cityFileName
-    #City object
-    city = None
-
-    with open(fileName) as infile:
-        #Loads city JSON file
-        cityData = json.load(infile)
-
-        #Loads city info by JSON data
-        city = City(cityFileName.replace(".json", ''), cityData['statisticDataWeights'], cityData['monitoringDataWeights'])
-        print("    > Monitoring weights: "+str(cityData['monitoringDataWeights']))
-        print("    > Statistic weights: "+str(cityData['statisticDataWeights']))
-
-        pathCount = 1
-        for pathData in cityData['paths']:
-            print("    > Path "+str(pathCount)+": "+pathData['ID'])
-            print("      - Construction date: "+pathData['constructionDate'])
-            print("      - Maintenance date: "+pathData['maintenanceDate'])
-            print("      - Inspection date: "+pathData['inspectionDate'])
-            print("      - Creator: "+str(pathData['creator']))
-
-            #Loads path info by JSON dataself.location
-            path = city.insertPath(pathData['ID'], pathData['constructionDate'], pathData['maintenanceDate'], pathData['inspectionDate'], pathData['creator'])
-            stretchCount = 1
-            #Loads stretch info by JSON data
-            for stretchData in pathData['stretches']:
-                print("      - Stretch "+str(stretchCount)+": "+stretchData['ID'])
-                print("        . Type: "+str(stretchData['type']))
-                print("        . Signage: "+str(stretchData['signage']))
-                directionSymbol = "<-->"
-                if stretchData['direction'] == 1:
-                    directionSymbol = "-->"
-                elif stretchData['direction'] == 2:
-                    directionSymbol = "<--"
-                print("        . Points connection: "+str(stretchData['P1'])+" "+directionSymbol+" "+str(stretchData['P2']))
-                print("        . Statistic data: "+str(stretchData['statisticData']))
-                print("        . Bike passage number: "+str(stretchData['bikePassageNumber']))
-                print("        . Average monitoring variables: "+str(stretchData['averageMonitoringData']))
-                print("        . Peak monitoring variables: "+str(stretchData['peakMonitoringData']))
-                print("        . Valley monitoring variables: "+str(stretchData['valleyMonitoringData']))
-                print("        . BikeWay Quality: "+str(stretchData['bikeWayQuality']))
-
-                stretch = path.insertStretch(stretchData['ID'], stretchData['P1'], stretchData['P2'], stretchData['type'], stretchData['direction'], stretchData['signage'])
-                stretch.statisticData = stretchData['statisticData']
-                stretch.bikePassageNumber = stretchData['bikePassageNumber']
-                stretch.averageMonitoringData = stretchData['averageMonitoringData']
-                stretch.peakMonitoringData = stretchData['peakMonitoringData']
-                stretch.valleyMonitoringData = stretchData['valleyMonitoringData']
-                stretch.bikeWayQuality = stretchData['bikeWayQuality']
-                stretchCount+=1
-            pathCount+=1
-
-    os.system("rm "+fileName)
-
-    return city
-
-def importVariables():
-    #Variables file name
-    fileName = "mapgeneratorInput/variables.json"
-    #Variables object
-    variablesInfo = None
-
-    with open(fileName) as infile:
-        #Loads city JSON file
-        variablesInfo = json.load(infile)
-
-    return variablesInfo
 
 if __name__ == "__main__":
     main()

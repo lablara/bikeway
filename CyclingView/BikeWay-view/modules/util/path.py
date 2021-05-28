@@ -1,4 +1,4 @@
-from stretch import Stretch
+from util.stretch import Stretch
 
 class Path:
     def __init__(self, ID, constructionDate, maintenanceDate, inspectionDate, creator):

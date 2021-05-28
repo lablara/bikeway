@@ -1,4 +1,4 @@
-from path import Path
+from util.path import Path
 
 class City:
     def __init__(self, ID, statisticDataWeights, monitoringDataWeights):
